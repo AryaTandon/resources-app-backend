@@ -27,10 +27,64 @@ const client = new Client(dbConfig);
 client.connect();
 
 app.get("/", async (req, res) => {
-  const dbres = await client.query('select * from categories');
+  const dbres = await client.query('SELECT res.id, res.title, res.author, res.url, ' +
+  'res.description, rt.cat_tags, rt.content_type, rec.recommender, rec.is_faculty, ' +
+  'rec.mark_stage, rec.was_used FROM resources res ' +
+  'LEFT JOIN resource_type rt ON res.id = rt.id ' +
+  'LEFT JOIN resource_tags rtg ON res.id = rtg.id ' +
+  'LEFT JOIN recommendations rec ON res.id = rec.id ' +
+  'ORDER BY res.id DESC LIMIT 20;');
   res.json(dbres.rows);
 });
 
+app.post("/", async (req, res) => {
+  try {
+    const {title, author, url, description, recommender, is_faculty, was_used, mark_stage, cat_tags, content_type} = req.body
+    await client.query("BEGIN");
+
+    const dbres = await client.query('INSERT INTO resources (title, author, url, description) ' +
+    'VALUES ($1, $2, $3, $4) RETURNING id;', [title, author, url, description]);
+
+    // id.rows: [ {id: 1} ]
+    // id.rows[0]: {id: 1}
+    // id.rows[0].id: 1
+    
+
+    let array2: any[] = [];
+    let dbres2 = { rows: array2 };
+    if (content_type) {
+      for (const type in content_type) {
+        const res = await client.query('INSERT INTO resource_type (id, content_type) ' +
+        'VALUES ($1, $2) RETURNING *;', [dbres.rows[0].id, content_type[type]]);
+        array2.push(res.rows[0].content_type);
+      }
+    } else {
+        array2 = [];
+    }
+    
+    let array3: any[] = [];
+    let dbres3 = { rows: array3 };
+    if (cat_tags) {
+      for (const tag in cat_tags) { 
+        const res = await client.query('INSERT INTO resource_tags (id, cat_tags) ' +
+        'VALUES ($1, $2) RETURNING *;', [dbres.rows[0].id, cat_tags[tag]]);
+        array3.push(res.rows[0].cat_tags);
+      }
+    } else {
+        array3 = [];
+    }
+
+    const dbres4 = await client.query('INSERT INTO recommendations (id, recommender, is_faculty, mark_stage, was_used) ' +
+    'VALUES ($1, $2, $3, $4, $5) RETURNING *;', [dbres.rows[0].id, recommender, is_faculty, mark_stage, was_used]);
+    
+    await client.query("COMMIT");
+    res.json([dbres.rows, dbres2.rows, dbres3.rows, dbres4.rows]);
+
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error(err.message);
+  }
+});
 
 //Start the server on the given port
 const port = process.env.PORT;
