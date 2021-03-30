@@ -28,7 +28,7 @@ client.connect();
 
 app.get("/", async (req, res) => {
   const dbres = await client.query('SELECT res.id, res.title, res.author, res.url, ' +
-  'res.description, rt.cat_tags, rt.content_type, rec.recommender, rec.is_faculty, ' +
+  'res.description, rtg.cat_tags, rt.content_type, rec.recommender, rec.is_faculty, ' +
   'rec.mark_stage, rec.was_used FROM resources res ' +
   'LEFT JOIN resource_type rt ON res.id = rt.id ' +
   'LEFT JOIN resource_tags rtg ON res.id = rtg.id ' +
