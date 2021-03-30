@@ -37,7 +37,7 @@ app.get("/", async (req, res) => {
   res.json(dbres.rows);
 });
 
-app.get("/:search_term", async (req, res) => {
+app.get("/search/:search_term", async (req, res) => {
   const searchTerm = req.params.search_term
   const dbres = await client.query("SELECT res.id, res.title, res.author, res.url, " +
   "res.description, rtg.cat_tags, rt.content_type, rec.recommender, rec.is_faculty, " +
@@ -49,6 +49,19 @@ app.get("/:search_term", async (req, res) => {
   "res.author ILIKE '%'||$1||'%' OR " +
   "res.description ILIKE '%'||$1||'%' OR " +
   "rtg.cat_tags ILIKE '%'||$1||'%';", [searchTerm]);
+  res.json(dbres.rows);
+
+});
+
+app.get("/cat_tags/:search_term", async (req, res) => {
+  const searchTerm = req.params.search_term
+  const dbres = await client.query("SELECT res.id, res.title, res.author, res.url, " +
+  "res.description, rtg.cat_tags, rt.content_type, rec.recommender, rec.is_faculty, " +
+  "rec.mark_stage, rec.was_used FROM resources res " +
+  "LEFT JOIN resource_type rt ON res.id = rt.id " +
+  "LEFT JOIN resource_tags rtg ON res.id = rtg.id " +
+  "LEFT JOIN recommendations rec ON res.id = rec.id " +
+  "WHERE rtg.cat_tags ILIKE '%'||$1||'%';", [searchTerm]);
   res.json(dbres.rows);
 
 });
