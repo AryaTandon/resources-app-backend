@@ -27,6 +27,12 @@ create table resource_tags (
 	constraint fk_resources foreign key(id) references resources(id)
 );
 
+create table resource_votes (
+	id int not null,
+	vote int not null,
+	constraint fk_resources foreign key(id) references resources(id)
+);
+
 
 select * from recommendations;
 select * from resource_type;
