@@ -26,27 +26,23 @@ app.use(cors()) //add CORS support to each following route handler
 const client = new Client(dbConfig);
 client.connect();
 
+const SQLQuery = "SELECT res.id, res.title, res.author, res.url, " +
+"res.description, rtg.cat_tags, rt.content_type, rec.recommender, rec.is_faculty, " +
+"rec.mark_stage, rec.was_used, rv.vote FROM resources res " +
+"LEFT JOIN resource_type rt ON res.id = rt.id " +
+"LEFT JOIN resource_tags rtg ON res.id = rtg.id " +
+"LEFT JOIN recommendations rec ON res.id = rec.id " +
+"LEFT JOIN resource_votes rv ON res.id = rv.id ";
+
 app.get("/", async (req, res) => {
-  const dbres = await client.query('SELECT res.id, res.title, res.author, res.url, ' +
-  'res.description, rtg.cat_tags, rt.content_type, rec.recommender, rec.is_faculty, ' +
-  'rec.mark_stage, rec.was_used, rv.vote FROM resources res ' +
-  'LEFT JOIN resource_type rt ON res.id = rt.id ' +
-  'LEFT JOIN resource_tags rtg ON res.id = rtg.id ' +
-  'LEFT JOIN recommendations rec ON res.id = rec.id ' +
-  'LEFT JOIN resource_votes rv ON res.id = rv.id ' +
-  'ORDER BY rv.id DESC;');
+  const dbres = await client.query(SQLQuery +
+  "ORDER BY rv.id DESC;");
   res.json(dbres.rows);
 });
 
 app.get("/search/:search_term", async (req, res) => {
   const searchTerm = req.params.search_term
-  const dbres = await client.query("SELECT res.id, res.title, res.author, res.url, " +
-  "res.description, rtg.cat_tags, rt.content_type, rec.recommender, rec.is_faculty, " +
-  "rec.mark_stage, rec.was_used, rv.vote FROM resources res " +
-  "LEFT JOIN resource_type rt ON res.id = rt.id " +
-  "LEFT JOIN resource_tags rtg ON res.id = rtg.id " +
-  "LEFT JOIN recommendations rec ON res.id = rec.id " +
-  "LEFT JOIN resource_votes rv ON res.id = rv.id " +
+  const dbres = await client.query(SQLQuery +
   "WHERE res.title ILIKE '%'||$1||'%' OR " +
   "res.author ILIKE '%'||$1||'%' OR " +
   "res.description ILIKE '%'||$1||'%' OR " +
@@ -56,13 +52,7 @@ app.get("/search/:search_term", async (req, res) => {
 
 app.get("/cat_tags/:search_term", async (req, res) => {
   const searchTerm = req.params.search_term;
-  const dbres = await client.query("SELECT res.id, res.title, res.author, res.url, " +
-  "res.description, rtg.cat_tags, rt.content_type, rec.recommender, rec.is_faculty, " +
-  "rec.mark_stage, rec.was_used, rv.vote FROM resources res " +
-  "LEFT JOIN resource_type rt ON res.id = rt.id " +
-  "LEFT JOIN resource_tags rtg ON res.id = rtg.id " +
-  "LEFT JOIN recommendations rec ON res.id = rec.id " +
-  "LEFT JOIN resource_votes rv ON res.id = rv.id " +
+  const dbres = await client.query(SQLQuery +
   "WHERE rtg.cat_tags ILIKE '%'||$1||'%';", [searchTerm]);
   res.json(dbres.rows);
 });
