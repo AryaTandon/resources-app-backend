@@ -36,7 +36,7 @@ const SQLQuery = "SELECT res.id, res.title, res.author, res.url, " +
 
 app.get("/", async (req, res) => {
   const dbres = await client.query(SQLQuery +
-  "ORDER BY rv.id DESC;");
+  "ORDER BY rv.vote DESC;");
   res.json(dbres.rows);
 });
 
